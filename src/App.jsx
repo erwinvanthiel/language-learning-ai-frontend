@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ??
@@ -6,15 +6,26 @@ const API_BASE_URL =
 
 export default function App() {
   const [context, setContext] = useState('')
-  const [responseText, setResponseText] = useState('')
-  const [error, setError] = useState('')
+  const [messages, setMessages] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const messagesEndRef = useRef(null)
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView?.({ behavior: 'smooth' })
+  }, [messages])
 
   async function generateResponse(event) {
     event.preventDefault()
+    const prompt = context.trim()
+
+    if (!prompt || isLoading) return
+
+    setMessages((currentMessages) => [
+      ...currentMessages,
+      { id: crypto.randomUUID(), role: 'user', text: prompt },
+    ])
+    setContext('')
     setIsLoading(true)
-    setResponseText('')
-    setError('')
 
     try {
       const response = await fetch(`${API_BASE_URL}/generate`, {
@@ -22,7 +33,7 @@ export default function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ context: { text: context } }),
+        body: JSON.stringify({ context: { text: prompt } }),
       })
 
       if (!response.ok) {
@@ -30,9 +41,20 @@ export default function App() {
       }
 
       const data = await response.json()
-      setResponseText(data.response)
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        { id: crypto.randomUUID(), role: 'assistant', text: data.response },
+      ])
     } catch (requestError) {
-      setError(requestError.message || 'Could not reach the API.')
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          isError: true,
+          text: requestError.message || 'Could not reach the API.',
+        },
+      ])
     } finally {
       setIsLoading(false)
     }
@@ -40,22 +62,40 @@ export default function App() {
 
   return (
     <main>
-      <section aria-live="polite" className={error ? 'response error' : 'response'}>
-        {responseText || error}
+      <section aria-label="Conversation" className="conversation">
+        {messages.map((message) => (
+          <article
+            className={`message ${message.role}${message.isError ? ' error' : ''}`}
+            key={message.id}
+          >
+            <span className="visually-hidden">
+              {message.role === 'user' ? 'You' : 'Assistant'}:
+            </span>
+            {message.text}
+          </article>
+        ))}
+        {isLoading && (
+          <div aria-live="polite" className="message assistant pending">
+            Generating…
+          </div>
+        )}
+        <div ref={messagesEndRef} />
       </section>
 
-      <form onSubmit={generateResponse}>
-        <label htmlFor="context">Context</label>
+      <form className="composer" onSubmit={generateResponse}>
+        <label className="visually-hidden" htmlFor="context">
+          Message
+        </label>
         <textarea
           id="context"
           value={context}
           onChange={(event) => setContext(event.target.value)}
-          placeholder="What would you like help learning?"
+          placeholder="Type a message…"
           required
         />
 
         <button type="submit" disabled={isLoading || !context.trim()}>
-          {isLoading ? 'Generating…' : 'Generate response'}
+          Send
         </button>
       </form>
     </main>

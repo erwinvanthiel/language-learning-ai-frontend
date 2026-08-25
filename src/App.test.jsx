@@ -18,14 +18,17 @@ describe('App', () => {
 
     render(<App />)
     await user.type(
-      screen.getByLabelText('Context'),
+      screen.getByLabelText('Message'),
       'Help me practise Dutch greetings',
     )
-    await user.click(screen.getByRole('button', { name: 'Generate response' }))
+    await user.click(screen.getByRole('button', { name: 'Send' }))
 
-    expect(
-      await screen.findByText('Practise saying: Goedemorgen!'),
-    ).toBeTruthy()
+    const userMessage = screen.getByText('Help me practise Dutch greetings')
+    const assistantMessage = await screen.findByText(
+      'Practise saying: Goedemorgen!',
+    )
+    expect(userMessage.closest('article').className).toContain('user')
+    expect(assistantMessage.closest('article').className).toContain('assistant')
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringMatching(/\/generate$/),
       expect.objectContaining({
@@ -35,5 +38,6 @@ describe('App', () => {
         }),
       }),
     )
+    expect(screen.getByLabelText('Message').value).toBe('')
   })
 })
