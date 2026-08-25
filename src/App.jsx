@@ -5,24 +5,32 @@ const API_BASE_URL =
   'https://language-learning-ai-api-evth.azurewebsites.net'
 
 export default function App() {
-  const [message, setMessage] = useState('')
+  const [context, setContext] = useState('')
+  const [responseText, setResponseText] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  async function loadMessage() {
+  async function generateResponse(event) {
+    event.preventDefault()
     setIsLoading(true)
-    setMessage('')
+    setResponseText('')
     setError('')
 
     try {
-      const response = await fetch(`${API_BASE_URL}/`)
+      const response = await fetch(`${API_BASE_URL}/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ context: { text: context } }),
+      })
 
       if (!response.ok) {
         throw new Error(`The API returned HTTP ${response.status}.`)
       }
 
       const data = await response.json()
-      setMessage(data.message)
+      setResponseText(data.response)
     } catch (requestError) {
       setError(requestError.message || 'Could not reach the API.')
     } finally {
@@ -32,14 +40,24 @@ export default function App() {
 
   return (
     <main>
-      <button type="button" onClick={loadMessage} disabled={isLoading}>
-        {isLoading ? 'Loading…' : 'Get message'}
-      </button>
+      <section aria-live="polite" className={error ? 'response error' : 'response'}>
+        {responseText || error}
+      </section>
 
-      <p aria-live="polite">
-        {message || error}
-      </p>
+      <form onSubmit={generateResponse}>
+        <label htmlFor="context">Context</label>
+        <textarea
+          id="context"
+          value={context}
+          onChange={(event) => setContext(event.target.value)}
+          placeholder="What would you like help learning?"
+          required
+        />
+
+        <button type="submit" disabled={isLoading || !context.trim()}>
+          {isLoading ? 'Generating…' : 'Generate response'}
+        </button>
+      </form>
     </main>
   )
 }
-
