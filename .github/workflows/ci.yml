@@ -26,8 +26,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run tests
+        run: npm test
+
       - name: Build PWA
         env:
           VITE_API_BASE_URL: https://language-learning-ai-api-evth.azurewebsites.net
         run: npm run build
-

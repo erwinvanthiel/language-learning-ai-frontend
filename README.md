@@ -12,8 +12,10 @@ npm install
 npm run dev
 ```
 
-The button calls the FastAPI backend configured through `VITE_API_BASE_URL` and
-displays the returned message.
+Enter language-learning context in the text area and select **Generate response**.
+The app posts `{"context": {"text": "..."}}` to the FastAPI backend configured
+through `VITE_API_BASE_URL` and displays the Azure OpenAI response above the text
+area.
 
 ## Deployment
 
