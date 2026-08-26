@@ -11,6 +11,34 @@ function savedCredential() {
   return localStorage.getItem('googleCredential') ?? sessionStorage.getItem('googleCredential')
 }
 
+function highlightMessage(text, feedback, onSelect) {
+  if (!feedback?.length) return text
+  const parts = []
+  let cursor = 0
+  feedback
+    .filter((item) => Number.isInteger(item.start) && Number.isInteger(item.end))
+    .sort((a, b) => a.start - b.start)
+    .forEach((item, index) => {
+      const start = Math.max(cursor, item.start)
+      const end = Math.min(text.length, item.end)
+      if (start >= end) return
+      if (start > cursor) parts.push(<span key={`text-${index}`}>{text.slice(cursor, start)}</span>)
+      parts.push(
+        <button
+          className="message-highlight"
+          key={`highlight-${index}`}
+          onClick={() => onSelect(item)}
+          type="button"
+        >
+          {text.slice(start, end)}
+        </button>,
+      )
+      cursor = end
+    })
+  if (cursor < text.length) parts.push(<span key="text-end">{text.slice(cursor)}</span>)
+  return parts
+}
+
 export default function App() {
   const [credential, setCredential] = useState(savedCredential)
   const [context, setContext] = useState('')
@@ -20,6 +48,7 @@ export default function App() {
   const [authError, setAuthError] = useState('')
   const [isHistoryLoading, setIsHistoryLoading] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [activeFeedback, setActiveFeedback] = useState(null)
   const conversationRef = useRef(null)
   const messagesEndRef = useRef(null)
 
@@ -53,13 +82,16 @@ export default function App() {
       })
       .then(([storedMessages, storedSettings]) => {
         if (!isCurrent) return
-        setMessages(
-          storedMessages.map((message) => ({
-            id: message.id,
-            role: message.role ?? 'user',
-            text: message.text,
-          })),
-        )
+        const restoredMessages = []
+        storedMessages.forEach((message) => {
+          const restored = { id: message.id, role: message.role ?? 'user', text: message.text }
+          if (restored.role === 'assistant' && message.feedback?.length) {
+            const previousUser = [...restoredMessages].reverse().find((item) => item.role === 'user')
+            if (previousUser) previousUser.feedback = message.feedback
+          }
+          restoredMessages.push(restored)
+        })
+        setMessages(restoredMessages)
         if (storedSettings?.native_language && storedSettings?.learning_language) {
           setSettings(storedSettings)
         }
@@ -94,6 +126,7 @@ export default function App() {
     sessionStorage.removeItem('googleCredential')
     setCredential(null)
     setMessages([])
+    setActiveFeedback(null)
     setContext('')
     setIsSettingsOpen(false)
   }
@@ -124,9 +157,10 @@ export default function App() {
 
     if (!prompt || isLoading) return
 
+    const userMessageId = crypto.randomUUID()
     setMessages((currentMessages) => [
       ...currentMessages,
-      { id: crypto.randomUUID(), role: 'user', text: prompt },
+      { id: userMessageId, role: 'user', text: prompt },
     ])
     setContext('')
     setIsLoading(true)
@@ -152,6 +186,9 @@ export default function App() {
       }
 
       const data = await response.json()
+      setMessages((currentMessages) => currentMessages.map((message) => (
+        message.id === userMessageId ? { ...message, feedback: data.feedback ?? [] } : message
+      )))
       setMessages((currentMessages) => [
         ...currentMessages,
         { id: crypto.randomUUID(), role: 'assistant', text: data.response },
@@ -233,7 +270,17 @@ export default function App() {
             <span className="visually-hidden">
               {message.role === 'user' ? 'You' : 'Assistant'}:
             </span>
-            {message.text}
+            {message.role === 'user'
+              ? highlightMessage(message.text, message.feedback, setActiveFeedback)
+              : message.text}
+            {activeFeedback && message.role === 'user' && message.feedback?.includes(activeFeedback) && (
+              <div className="feedback-popup" role="dialog">
+                <button aria-label="Close feedback" className="feedback-close" onClick={() => setActiveFeedback(null)} type="button">
+                  ×
+                </button>
+                {activeFeedback.comment}
+              </div>
+            )}
           </article>
         ))}
         {isLoading && (

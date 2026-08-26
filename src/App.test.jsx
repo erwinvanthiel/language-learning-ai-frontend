@@ -34,16 +34,23 @@ describe('App', () => {
           url.endsWith('/messages')
             ? [
                 { id: 'stored-1', role: 'user', text: 'Earlier message' },
-                { id: 'stored-2', role: 'assistant', text: 'Earlier reply' },
+                {
+                  id: 'stored-2',
+                  role: 'assistant',
+                  text: 'Earlier reply',
+                  feedback: [{ start: 8, end: 15, comment: 'Use the correct ending.' }],
+                },
               ]
             : { response: 'Practise saying: Goedemorgen!' },
       }),
     )
 
     render(<App />)
-    expect(await screen.findByText('Earlier message')).toBeTruthy()
-    expect(screen.getByText('Earlier message').closest('article').className).toContain('user')
+    expect(await screen.findByText('message', { exact: true })).toBeTruthy()
+    expect(screen.getByText('message', { exact: true }).closest('article').className).toContain('user')
     expect(screen.getByText('Earlier reply').closest('article').className).toContain('assistant')
+    await user.click(screen.getByRole('button', { name: 'message' }))
+    expect(screen.getByRole('dialog').textContent).toContain('Use the correct ending.')
     await user.type(
       screen.getByLabelText('Message'),
       'Help me practise Dutch greetings',
