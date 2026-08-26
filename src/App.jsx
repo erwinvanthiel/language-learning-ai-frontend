@@ -26,7 +26,7 @@ export default function App() {
   useEffect(() => {
     const conversation = conversationRef.current
     if (conversation) {
-      conversation.scrollTo({ top: conversation.scrollHeight, behavior: 'smooth' })
+      conversation.scrollTo?.({ top: conversation.scrollHeight, behavior: 'smooth' })
     }
   }, [messages])
 
