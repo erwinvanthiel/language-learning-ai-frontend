@@ -31,13 +31,18 @@ describe('App', () => {
         status: 200,
         json: async () =>
           url.endsWith('/messages')
-            ? [{ id: 'stored-1', text: 'Earlier message' }]
+            ? [
+                { id: 'stored-1', role: 'user', text: 'Earlier message' },
+                { id: 'stored-2', role: 'assistant', text: 'Earlier reply' },
+              ]
             : { response: 'Practise saying: Goedemorgen!' },
       }),
     )
 
     render(<App />)
     expect(await screen.findByText('Earlier message')).toBeTruthy()
+    expect(screen.getByText('Earlier message').closest('article').className).toContain('user')
+    expect(screen.getByText('Earlier reply').closest('article').className).toContain('assistant')
     await user.type(
       screen.getByLabelText('Message'),
       'Help me practise Dutch greetings',

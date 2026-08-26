@@ -44,7 +44,7 @@ export default function App() {
         setMessages(
           storedMessages.map((message) => ({
             id: message.id,
-            role: 'user',
+            role: message.role ?? 'user',
             text: message.text,
           })),
         )
