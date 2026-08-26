@@ -13,29 +13,70 @@
 body {
   margin: 0;
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 #root {
   height: 100vh;
   height: 100dvh;
+  min-height: 0;
 }
 
 main {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  inset: 0;
+  height: auto;
+  min-height: 0;
   width: min(100%, 44rem);
   margin: 0 auto;
   background: #fff;
 }
 
 .top-bar {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid #e5e7eb;
   padding: 0.75rem 1.5rem;
   font-weight: 600;
+}
+
+.top-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.settings-panel {
+  position: absolute;
+  z-index: 2;
+  top: 4.25rem;
+  right: max(1rem, calc((100% - 44rem) / 2 + 1rem));
+  display: grid;
+  gap: 0.5rem;
+  width: min(20rem, calc(100% - 2rem));
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  background: #fff;
+  box-shadow: 0 0.5rem 1.5rem rgb(17 24 39 / 15%);
+}
+
+.settings-panel label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.settings-panel select {
+  min-height: 2.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  color: inherit;
+  background: #fff;
+  font: inherit;
 }
 
 .sign-in-page {
@@ -61,10 +102,15 @@ main {
 }
 
 .conversation {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 1.5rem;
   overscroll-behavior: contain;
   scroll-behavior: smooth;
@@ -103,11 +149,12 @@ main {
 }
 
 .composer {
+  flex: 0 0 auto;
   display: flex;
   align-items: flex-end;
   gap: 0.75rem;
   border-top: 1px solid #e5e7eb;
-  padding: 1rem 1.5rem;
+  padding: 1rem 1.5rem calc(1rem + env(safe-area-inset-bottom));
   background: #fff;
 }
 
@@ -187,6 +234,6 @@ button:disabled {
   }
 
   .composer {
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
   }
 }
