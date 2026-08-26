@@ -17,6 +17,12 @@ The app posts `{"context": {"text": "..."}}` to the FastAPI backend configured
 through `VITE_API_BASE_URL` and displays the Azure OpenAI response above the text
 area.
 
+Set `VITE_GOOGLE_CLIENT_ID` to a Google OAuth web client ID. Users must sign in
+with Google before using the chat. The frontend sends the Google ID token to the
+API, which validates it server-side, and loads that authenticated user's stored
+prompts. The token is kept only in browser session storage and is removed on sign
+out.
+
 ## Deployment
 
 Pull requests to `dev` or `main` run tests and a production build. Merges to

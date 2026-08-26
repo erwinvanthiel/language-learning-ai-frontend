@@ -41,6 +41,7 @@ jobs:
       - name: Build PWA
         env:
           VITE_API_BASE_URL: ${{ github.ref_name == 'main' && 'https://language-learning-ai-api-evth.azurewebsites.net' || 'https://language-learning-ai-api-dev-evth.azurewebsites.net' }}
+          VITE_GOOGLE_CLIENT_ID: 815295572197-qkb0jugsje2q719dmpvu5lf1jelpubuu.apps.googleusercontent.com
         run: npm run build
 
       - name: Deploy to Azure Static Web Apps

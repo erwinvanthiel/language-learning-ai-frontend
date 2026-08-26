@@ -22,11 +22,42 @@ body {
 
 main {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   height: 100%;
   width: min(100%, 44rem);
   margin: 0 auto;
   background: #fff;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+}
+
+.sign-in-page {
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+
+.sign-in-card {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+.sign-in-card h1,
+.sign-in-card p {
+  margin: 0;
+}
+
+.auth-error {
+  color: #b91c1c;
 }
 
 .conversation {
@@ -136,6 +167,18 @@ button:focus-visible {
 button:disabled {
   cursor: wait;
   opacity: 0.65;
+}
+
+.secondary-button {
+  min-height: auto;
+  border: 1px solid #d1d5db;
+  padding: 0.5rem 0.75rem;
+  color: #111827;
+  background: #fff;
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: #f3f4f6;
 }
 
 @media (max-width: 32rem) {
