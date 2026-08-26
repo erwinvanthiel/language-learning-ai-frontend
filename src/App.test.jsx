@@ -13,13 +13,14 @@ vi.mock('@react-oauth/google', () => ({
 }))
 
 beforeEach(() => {
-  sessionStorage.setItem('googleCredential', 'existing-google-token')
+  localStorage.setItem('googleCredential', 'existing-google-token')
 })
 
 afterEach(() => {
   cleanup()
   vi.restoreAllMocks()
   sessionStorage.clear()
+  localStorage.clear()
 })
 
 describe('App', () => {
@@ -63,7 +64,11 @@ describe('App', () => {
           Authorization: 'Bearer existing-google-token',
         }),
         body: JSON.stringify({
-          context: { text: 'Help me practise Dutch greetings' },
+          context: {
+            text: 'Help me practise Dutch greetings',
+            native_language: 'English',
+            learning_language: 'Dutch',
+          },
         }),
       }),
     )
@@ -71,7 +76,7 @@ describe('App', () => {
   })
 
   it('signs in with Google before loading the users messages', async () => {
-    sessionStorage.clear()
+    localStorage.clear()
     const user = userEvent.setup()
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
@@ -83,12 +88,35 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: 'Sign in with Google' }))
 
     expect(await screen.findByLabelText('Message')).toBeTruthy()
-    expect(sessionStorage.getItem('googleCredential')).toBe('google-id-token')
+    expect(localStorage.getItem('googleCredential')).toBe('google-id-token')
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringMatching(/\/messages$/),
       expect.objectContaining({
         headers: { Authorization: 'Bearer google-id-token' },
       }),
     )
+  })
+
+  it('saves language settings and logs out', async () => {
+    const user = userEvent.setup()
+    vi.spyOn(globalThis, 'fetch').mockImplementation((url, options) => {
+      if (options?.method === 'PUT') {
+        return Promise.resolve({ ok: true, status: 200, json: async () => JSON.parse(options.body) })
+      }
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => (url.endsWith('/messages') ? [] : { native_language: 'English', learning_language: 'Dutch' }),
+      })
+    })
+
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Settings' }))
+    await user.selectOptions(screen.getByLabelText('Language I want to learn'), 'German')
+    await user.click(screen.getByRole('button', { name: 'Save settings' }))
+    expect(screen.queryByRole('button', { name: 'Save settings' })).toBeNull()
+    await user.click(screen.getByRole('button', { name: 'Log out' }))
+    expect(localStorage.getItem('googleCredential')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Sign in with Google' })).toBeTruthy()
   })
 })
