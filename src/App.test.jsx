@@ -46,8 +46,8 @@ describe('App', () => {
     )
 
     render(<App />)
-    expect(await screen.findByText('Earlier message')).toBeTruthy()
-    expect(screen.getByText('Earlier message').closest('article').className).toContain('user')
+    expect(await screen.findByText('message', { exact: true })).toBeTruthy()
+    expect(screen.getByText('message', { exact: true }).closest('article').className).toContain('user')
     expect(screen.getByText('Earlier reply').closest('article').className).toContain('assistant')
     await user.click(screen.getByRole('button', { name: 'message' }))
     expect(screen.getByRole('dialog').textContent).toContain('Use the correct ending.')
