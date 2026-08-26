@@ -13,6 +13,7 @@
 body {
   margin: 0;
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 #root {
@@ -22,11 +23,11 @@ body {
 }
 
 main {
-  position: relative;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
+  position: fixed;
+  inset: 0;
+  height: auto;
   min-height: 0;
   width: min(100%, 44rem);
   margin: 0 auto;
@@ -108,6 +109,8 @@ main {
   flex-direction: column;
   gap: 0.75rem;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 1.5rem;
   overscroll-behavior: contain;
   scroll-behavior: smooth;

@@ -20,10 +20,14 @@ export default function App() {
   const [authError, setAuthError] = useState('')
   const [isHistoryLoading, setIsHistoryLoading] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const conversationRef = useRef(null)
   const messagesEndRef = useRef(null)
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView?.({ behavior: 'smooth' })
+    const conversation = conversationRef.current
+    if (conversation) {
+      conversation.scrollTo?.({ top: conversation.scrollHeight, behavior: 'smooth' })
+    }
   }, [messages])
 
   useEffect(() => {
@@ -214,7 +218,7 @@ export default function App() {
           <button type="submit">Save settings</button>
         </form>
       )}
-      <section aria-label="Conversation" className="conversation">
+      <section aria-label="Conversation" className="conversation" ref={conversationRef}>
         {isHistoryLoading && (
           <div aria-live="polite" className="message assistant pending">
             Loading messages…
