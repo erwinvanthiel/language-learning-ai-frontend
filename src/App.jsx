@@ -49,6 +49,7 @@ export default function App() {
   const [isHistoryLoading, setIsHistoryLoading] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [activeFeedback, setActiveFeedback] = useState(null)
+  const [translationPopup, setTranslationPopup] = useState(null)
   const conversationRef = useRef(null)
   const messagesEndRef = useRef(null)
 
@@ -127,8 +128,38 @@ export default function App() {
     setCredential(null)
     setMessages([])
     setActiveFeedback(null)
+    setTranslationPopup(null)
     setContext('')
     setIsSettingsOpen(false)
+  }
+
+  async function translateSelection(event, messageId) {
+    const selection = window.getSelection?.()
+    const selectedText = selection?.toString().trim()
+    if (!selectedText || !event.currentTarget.contains(selection.anchorNode)) return
+    selection.removeAllRanges()
+    setTranslationPopup({ messageId, selectedText, translation: '', loading: true })
+    try {
+      const response = await fetch(`${API_BASE_URL}/translate`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${credential}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: selectedText }),
+      })
+      if (!response.ok) throw new Error(`The API returned HTTP ${response.status}.`)
+      const data = await response.json()
+      setTranslationPopup({ messageId, selectedText, translation: data.translation, loading: false })
+    } catch (requestError) {
+      setTranslationPopup({
+        messageId,
+        selectedText,
+        translation: requestError.message || 'Could not translate the selected text.',
+        loading: false,
+        error: true,
+      })
+    }
   }
 
   async function saveSettings(event) {
@@ -301,6 +332,8 @@ export default function App() {
           <article
             className={`message ${message.role}${message.isError ? ' error' : ''}`}
             key={message.id}
+            onMouseUp={message.role === 'assistant' ? (event) => translateSelection(event, message.id) : undefined}
+            onTouchEnd={message.role === 'assistant' ? (event) => translateSelection(event, message.id) : undefined}
           >
             <span className="visually-hidden">
               {message.role === 'user' ? 'You' : 'Assistant'}:
@@ -308,6 +341,14 @@ export default function App() {
             {message.role === 'user'
               ? highlightMessage(message.text, message.feedback, setActiveFeedback)
               : message.text}
+            {translationPopup?.messageId === message.id && (
+              <div className={`feedback-popup translation-popup${translationPopup.error ? ' error' : ''}`} role="dialog">
+                <button aria-label="Close translation" className="feedback-close" onClick={() => setTranslationPopup(null)} type="button">
+                  ×
+                </button>
+                {translationPopup.loading ? 'Translating…' : translationPopup.translation}
+              </div>
+            )}
             {activeFeedback && message.role === 'user' && message.feedback?.includes(activeFeedback) && (
               <div className="feedback-popup" role="dialog">
                 <button aria-label="Close feedback" className="feedback-close" onClick={() => setActiveFeedback(null)} type="button">
