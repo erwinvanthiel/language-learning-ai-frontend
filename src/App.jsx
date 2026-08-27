@@ -49,7 +49,7 @@ export default function App() {
   const [credential, setCredential] = useState(savedCredential)
   const [context, setContext] = useState('')
   const [messages, setMessages] = useState([])
-  const [settings, setSettings] = useState({ native_language: 'English', learning_language: 'Dutch' })
+  const [settings, setSettings] = useState({ native_language: 'English', learning_language: 'Dutch', assistant_persona: '' })
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [authError, setAuthError] = useState('')
   const [isHistoryLoading, setIsHistoryLoading] = useState(false)
@@ -192,6 +192,23 @@ export default function App() {
     }
   }
 
+  async function deleteHistory() {
+    if (!window.confirm('Delete all of your chat history? This cannot be undone.')) return
+    setAuthError('')
+    try {
+      const response = await fetch(`${API_BASE_URL}/messages`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${credential}` },
+      })
+      if (!response.ok) throw new Error(`The API returned HTTP ${response.status}.`)
+      setMessages([])
+      setActiveFeedback(null)
+      setIsSettingsOpen(false)
+    } catch (requestError) {
+      setAuthError(requestError.message || 'Could not delete your chat history.')
+    }
+  }
+
   async function generateResponse(event) {
     event.preventDefault()
     const prompt = context.trim()
@@ -293,7 +310,19 @@ export default function App() {
           >
             {LANGUAGES.map((language) => <option key={language}>{language}</option>)}
           </select>
+          <label htmlFor="assistant-persona">AI personality (optional)</label>
+          <textarea
+            id="assistant-persona"
+            value={settings.assistant_persona ?? ''}
+            onChange={(event) => setSettings({ ...settings, assistant_persona: event.target.value })}
+            maxLength={500}
+            placeholder="For example: friendly, patient, and concise"
+            rows={3}
+          />
           <button type="submit">Save settings</button>
+          <button className="danger-button" onClick={deleteHistory} type="button">
+            Delete chat history
+          </button>
         </form>
       )}
       <section aria-label="Conversation" className="conversation" ref={conversationRef}>

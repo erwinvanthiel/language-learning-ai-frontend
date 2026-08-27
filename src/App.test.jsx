@@ -106,7 +106,8 @@ describe('App', () => {
 
   it('saves language settings and logs out', async () => {
     const user = userEvent.setup()
-    vi.spyOn(globalThis, 'fetch').mockImplementation((url, options) => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation((url, options) => {
       if (options?.method === 'PUT') {
         return Promise.resolve({ ok: true, status: 200, json: async () => JSON.parse(options.body) })
       }
@@ -122,6 +123,12 @@ describe('App', () => {
     await user.selectOptions(screen.getByLabelText('Language I want to learn'), 'German')
     await user.click(screen.getByRole('button', { name: 'Save settings' }))
     expect(screen.queryByRole('button', { name: 'Save settings' })).toBeNull()
+    await user.click(screen.getByRole('button', { name: 'Settings' }))
+    await user.click(screen.getByRole('button', { name: 'Delete chat history' }))
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringMatching(/\/messages$/),
+      expect.objectContaining({ method: 'DELETE' }),
+    )
     await user.click(screen.getByRole('button', { name: 'Log out' }))
     expect(localStorage.getItem('googleCredential')).toBeNull()
     expect(screen.getByRole('button', { name: 'Sign in with Google' })).toBeTruthy()
