@@ -11,6 +11,12 @@ function savedCredential() {
   return localStorage.getItem('googleCredential') ?? sessionStorage.getItem('googleCredential')
 }
 
+function decodeBase64Url(value) {
+  const padding = '='.repeat((4 - (value.length % 4)) % 4)
+  const decoded = atob((value + padding).replace(/-/g, '+').replace(/_/g, '/'))
+  return Uint8Array.from(decoded, (character) => character.charCodeAt(0))
+}
+
 function highlightMessage(text, feedback, onSelect) {
   if (!feedback?.length) return text
   const parts = []
@@ -108,6 +114,41 @@ export default function App() {
     return () => {
       isCurrent = false
     }
+  }, [credential])
+
+  useEffect(() => {
+    if (!credential || !('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return
+
+    let cancelled = false
+    async function registerPush() {
+      try {
+        const permission = Notification.permission === 'default'
+          ? await Notification.requestPermission()
+          : Notification.permission
+        if (permission !== 'granted' || cancelled) return
+        const publicKeyResponse = await fetch(`${API_BASE_URL}/push/vapid-public-key`)
+        if (!publicKeyResponse.ok) return
+        const { publicKey } = await publicKeyResponse.json()
+        const registration = await navigator.serviceWorker.ready
+        let subscription = await registration.pushManager.getSubscription()
+        if (!subscription) {
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: decodeBase64Url(publicKey),
+          })
+        }
+        if (cancelled) return
+        await fetch(`${API_BASE_URL}/push/subscription`, {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${credential}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(subscription.toJSON()),
+        })
+      } catch {
+        // Push is optional; chat remains usable when permission or push setup fails.
+      }
+    }
+    registerPush()
+    return () => { cancelled = true }
   }, [credential])
 
   function signIn(response) {
