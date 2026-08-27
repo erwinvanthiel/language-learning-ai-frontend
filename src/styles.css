@@ -79,6 +79,22 @@ main {
   font: inherit;
 }
 
+.settings-panel textarea {
+  width: 100%;
+  min-height: 5rem;
+  max-height: 8rem;
+  resize: vertical;
+}
+
+.danger-button {
+  color: #b91c1c;
+  background: #fef2f2;
+}
+
+.danger-button:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
 .sign-in-page {
   display: grid;
   place-items: center;
