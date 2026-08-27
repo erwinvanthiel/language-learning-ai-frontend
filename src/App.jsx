@@ -185,7 +185,13 @@ export default function App() {
         body: JSON.stringify(settings),
       })
       if (!response.ok) throw new Error(`The API returned HTTP ${response.status}.`)
-      setSettings(await response.json())
+      const savedSettings = await response.json()
+      setSettings((currentSettings) => ({
+        ...currentSettings,
+        ...savedSettings,
+        // Keep the edited text visible while older backend instances roll out.
+        assistant_persona: savedSettings.assistant_persona ?? currentSettings.assistant_persona,
+      }))
       setIsSettingsOpen(false)
     } catch (requestError) {
       setAuthError(requestError.message || 'Could not save your settings.')
