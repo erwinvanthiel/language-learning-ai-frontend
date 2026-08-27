@@ -127,10 +127,53 @@ main {
 }
 
 .message.user {
+  position: relative;
   align-self: flex-end;
   border-bottom-right-radius: 0.25rem;
   color: #fff;
   background: #111827;
+}
+
+.message-highlight {
+  min-height: auto;
+  border: 0;
+  border-bottom: 2px solid #fbbf24;
+  border-radius: 0;
+  padding: 0;
+  color: inherit;
+  background: rgb(251 191 36 / 35%);
+  font: inherit;
+  font-weight: inherit;
+}
+
+.message-highlight:hover:not(:disabled) {
+  background: rgb(251 191 36 / 60%);
+}
+
+.feedback-popup {
+  position: absolute;
+  z-index: 3;
+  right: 0;
+  bottom: calc(100% + 0.5rem);
+  width: min(18rem, 80vw);
+  padding: 0.75rem 2rem 0.75rem 0.75rem;
+  border: 1px solid #fbbf24;
+  border-radius: 0.5rem;
+  color: #111827;
+  background: #fffbeb;
+  box-shadow: 0 0.5rem 1rem rgb(17 24 39 / 15%);
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.feedback-close {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  min-height: auto;
+  padding: 0.15rem 0.4rem;
+  color: #111827;
+  background: transparent;
 }
 
 .message.assistant {
