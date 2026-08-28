@@ -49,7 +49,7 @@ export default function App() {
   const [credential, setCredential] = useState(savedCredential)
   const [context, setContext] = useState('')
   const [messages, setMessages] = useState([])
-  const [settings, setSettings] = useState({ native_language: 'English', learning_language: 'Dutch', assistant_persona: '' })
+  const [settings, setSettings] = useState({ native_language: 'English', learning_language: 'Dutch', assistant_persona: '', interests: '' })
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [authError, setAuthError] = useState('')
   const [isHistoryLoading, setIsHistoryLoading] = useState(false)
@@ -367,6 +367,15 @@ export default function App() {
             onChange={(event) => setSettings({ ...settings, assistant_persona: event.target.value })}
             maxLength={500}
             placeholder="For example: friendly, patient, and concise"
+            rows={3}
+          />
+          <label htmlFor="interests">My interests (optional)</label>
+          <textarea
+            id="interests"
+            value={settings.interests ?? ''}
+            onChange={(event) => setSettings({ ...settings, interests: event.target.value })}
+            maxLength={500}
+            placeholder="For example: hiking, space, and cooking"
             rows={3}
           />
           <button type="submit">Save settings</button>
