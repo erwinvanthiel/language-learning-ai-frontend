@@ -14,12 +14,17 @@ self.addEventListener('push', (event) => {
     payload = { body: event.data?.text() ?? '' }
   }
   event.waitUntil(
-    self.registration.showNotification(payload.title ?? 'Language Learning AI', {
+    Promise.all([
+      self.registration.showNotification(payload.title ?? 'Language Learning AI', {
       body: payload.body ?? 'I’m here whenever you’re ready to practise.',
       icon: '/icon.svg',
       badge: '/icon.svg',
       data: { url: payload.url ?? '/' },
-    }),
+      }),
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+        clients.forEach((client) => client.postMessage({ type: 'standard-push', body: payload.body }))
+      }),
+    ]),
   )
 })
 
