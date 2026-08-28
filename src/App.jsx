@@ -118,6 +118,19 @@ export default function App() {
   }, [credential])
 
   useEffect(() => {
+    if (!('serviceWorker' in navigator)) return undefined
+    const handlePushMessage = (event) => {
+      if (event.data?.type !== 'standard-push' || !event.data.body) return
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        { id: crypto.randomUUID(), role: 'assistant', text: event.data.body },
+      ])
+    }
+    navigator.serviceWorker.addEventListener('message', handlePushMessage)
+    return () => navigator.serviceWorker.removeEventListener('message', handlePushMessage)
+  }, [])
+
+  useEffect(() => {
     if (!credential || !('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return
 
     let cancelled = false
